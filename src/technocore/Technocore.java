@@ -494,7 +494,7 @@ class Network {
 	public void printWB() {
 		try {
 			PrintStream consoleOut = System.out;
-			PrintStream fileOut = new PrintStream(new FileOutputStream("home.txt"));
+			PrintStream fileOut = new PrintStream(new FileOutputStream("outie.txt"));
 			System.setOut(fileOut);
 
 			System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
