@@ -7,6 +7,14 @@
  * Program can train a network, read weights from a file
  * print accuracy of a model and save weights and biases to a file
  * using ==> jdk-17.0.8.7
+ * 
+ * some ref:
+ * has tables of test error rates and 
+ * 	number of neurons in the hidden layers, to get an idea of performance
+ * https://web.archive.org/web/20220331130319/https://yann.lecun.com/exdb/mnist/
+ * for example:
+ * CLASSIFIER										PREPROCESSING	TEST ERROR RATE (%)	Reference
+ * 2-layer NN, 300 hidden units, mean square error	none			4.7					LeCun et al. 1998
  */
 package technocore;
 import java.io.File;
@@ -17,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.ThreadLocalRandom;
+// import java.util.concurrent.ThreadLocalRandom;
 
 public class Technocore {
-	static int EPOCHS = 30;
-	static double trainingRate = 3.0;
+	static int EPOCHS = 10;
+	static double TRAINING_RATE = 3.0;
+	static int NUM_NEURONS_IN_HIDDEN_LAYER = 30;
 	static double[][] Xpart1 = 
 						  { {0, 1, 0, 1},
 							{1, 0, 1, 0},
@@ -48,8 +57,8 @@ public class Technocore {
 		// load mnist data here
 		// works on windows
 		String fileNTrain = "data\\mnist_train.csv";
-		ArrayList<double[]> dataArray = new ArrayList<>();
-		ArrayList<int[]> labelArray = new ArrayList<>();
+		ArrayList<double[]> dataArray  = new ArrayList<>();
+		ArrayList<int[]> 	labelArray = new ArrayList<>();
 		try {
 			File file = new File(fileNTrain);
 			Scanner scanner = new Scanner(file);
@@ -57,7 +66,6 @@ public class Technocore {
 				String line = scanner.nextLine();
 				String[] strValues = line.split(",");
 
-				// label? parse as int
 				int[] label = new int[1];
 				label[0] = Integer.parseInt(strValues[0]);
 				labelArray.add(label);
@@ -115,12 +123,13 @@ public class Technocore {
 		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
 		// Network starts here
+
 		// our X and Y
 		// X = mnistMainTrain;
 		// Y = labels;
 		// new Matrix(X).dimPrint();
 		// new Matrix(Y).dimPrint();
-		Network fatMan = new Network(784, 30, 10, false);
+		Network fatMan = new Network(784, NUM_NEURONS_IN_HIDDEN_LAYER, 10, false);
 		fatMan.printWB();
 		// cls();
 		// if (true)
@@ -128,7 +137,7 @@ public class Technocore {
 		try (Scanner scanner = new Scanner(System.in)) {
 			// USER control starts here
 			int onlyOnce = 0;
-			while (onlyOnce < 1) {
+			while (onlyOnce < 1) { // change to while true
 			    System.out.println("Choose an option:");
 			    System.out.println("[1] Train the network");
 			    System.out.println("[2] Load a pre-trained network");
@@ -146,7 +155,7 @@ public class Technocore {
 			    switch (choice) {
 			        case 1:
 						// cls();
-						fatMan.SGD(mnistMainTrain, labels, EPOCHS, 3, 10);
+						fatMan.SGD(mnistMainTrain, labels, EPOCHS, TRAINING_RATE, 10);
 						fatMan.printWB();
 						NETWORK_HAS_STATE = true;
 
@@ -293,7 +302,8 @@ public class Technocore {
 	}
 	// the Fisher–Yates shuffle from wikipedia
 	static void shuffleMe(int[] arrayMe) {
-		Random randomMe = ThreadLocalRandom.current();
+		Random randomMe = new Random();
+		// Random randomMe = ThreadLocalRandom.current().
 		for (int i = arrayMe.length - 1; i > 0; i--) {
 			int indexMe = randomMe.nextInt(i + 1);
 
@@ -438,6 +448,7 @@ class Network {
 			// randomize minibatches for part 2
 			// System.out.println(X[0].length);
 			Technocore.shuffleMe(shuffledA);
+
 			// System.out.println(Arrays.toString(shuffledA));
 			
 			// System.out.println(X.length / mbSize);
@@ -466,6 +477,9 @@ class Network {
 					// System.out.println("~~~~~~~~~~~");
 
 					updateOnMiniBatch(X1, Y1, tRate, mbSize);
+
+					// System.out.printf("The minibatch number is: %d%n", miniB);
+					// System.out.println("~~~~");
 					
 					// System.out.println("- - - - - - - - - - - - - - - ");
 					// System.out.printf("The minibatch number is: %d%n", miniB);
@@ -511,6 +525,7 @@ class Network {
 			}
 			// after each epoch print accuracy
 			if(!istest) {
+			// if(false) {
 				int[] correctPredictions = new int[10];
 				int totalSamples = Technocore.ezLabels.length;
 				int[] Yb = Technocore.ezLabels;
@@ -529,9 +544,8 @@ class Network {
 				}
 				double accuracy = (double)(totalCorrect * 100.0 / totalSamples);
 				System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/60000 = ");
-				System.out.printf("%.3f", accuracy);
+				System.out.printf("%.3f %%", accuracy);
 				System.out.println();
-				// System.out.printf("%f", accuracy);
 			}
 		}
 	}
@@ -629,13 +643,17 @@ class Matrix {
 		// 	for ( int j = 0; j < Columns; j++)
 		// 		this.data[i][j] = Math.random() * 2 - 1;
 		// note: ( random gives a double from 0 to 1 ) times 2 - 1 scales it from -1 to 1 
+		// ^ this bit up here didn't work great!! use a gaussian!
+
 		Random Randy = new Random();
-		double mean = 0;
-		double stdDev = 0.01;
+		double mean = 0.0;
+		double stdDev = 0.05;
 		for (int i = 0; i < Rows; i++)
-			for ( int j = 0; j < Columns; j++)
-				this.data[i][j] = Randy.nextGaussian() * stdDev + mean;
-	}
+			for ( int j = 0; j < Columns; j++) {
+				this.data[i][j] = Randy.nextGaussian() * stdDev + mean; 
+			}
+	
+	} // end constructor
 
 	// constructor for passing 2 d array to the matrix class
 	public Matrix(double[][] data) {
@@ -785,7 +803,8 @@ class Matrix {
 		Matrix R = new Matrix(this.Rows, this.Columns);
 		for (int i = 0; i < this.Rows; i++) {
 			for (int j = 0; j < this.Columns; j++)
-				R.data[i][j] = 1 / (1 + Math.pow(2.71828, -this.data[i][j]));
+				this.data[i][j] = 1 / (1 + Math.exp(-this.data[i][j]));
+				// R.data[i][j] = 1 / (1 + Math.pow(2.71828, -this.data[i][j]));
 		}
 		return R;
 	}
