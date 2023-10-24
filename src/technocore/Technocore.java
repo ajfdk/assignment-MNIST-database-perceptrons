@@ -20,15 +20,21 @@ package technocore;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 // import java.util.concurrent.ThreadLocalRandom;
 
 public class Technocore {
-	static int EPOCHS = 30;
+	static int EPOCHS = 1;
 	static double TRAINING_RATE = 0.03;
 	static int NUM_NEURONS_IN_HIDDEN_LAYER = 32;
 	static double[][] Xpart1 = 
@@ -81,7 +87,8 @@ public class Technocore {
 				dataArray.add(fDataArray);
 			}
 			scanner.close();
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) {
 			System.err.println("File not found: " + e.getMessage());
 		}
 		// convert form Arraylist to 2d array
@@ -148,7 +155,8 @@ public class Technocore {
 				dataArrayTest.add(fDataArray);
 			}
 			scanner.close();
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) {
 			System.err.println("File not found: " + e.getMessage());
 		}
 		// convert form Arraylist to 2d array
@@ -199,8 +207,8 @@ public class Technocore {
 		// new Matrix(X).dimPrint();
 		// new Matrix(Y).dimPrint();
 		Network fatMan = new Network(784, NUM_NEURONS_IN_HIDDEN_LAYER, 10, false);
-		fatMan.printWBConsole();
-		fatMan.printWB();
+		// fatMan.printWBConsole();
+		// fatMan.printWB();
 		// cls();
 		// if (true)
 		// 	return;
@@ -225,6 +233,7 @@ public class Technocore {
 
 			    switch (choice) {
 			        case 1:
+						// Training the network
 						// cls();
 						fatMan.SGD(mnistMainTrain, labels, EPOCHS, TRAINING_RATE, 10);
 						fatMan.printWB();
@@ -233,7 +242,15 @@ public class Technocore {
 			            break;
 			        case 2:
 						cls();
-			            // Implement loading a pre-trained network logic
+			            // loading a pre-trained network logic
+						fatMan.weightsHiddenLayer = Matrix.readArrayFromFile("weightsHiddenLayer");
+						fatMan.weightsOutputLayer = Matrix.readArrayFromFile("weightsOutputLayer");
+						fatMan.biasesH = Matrix.readArrayFromFile("biasesH");
+						fatMan.biasesOut = Matrix.readArrayFromFile("biasesOut");
+						System.out.println("Loaded weights and biases from files.");
+
+						// once done loading, state is true
+						NETWORK_HAS_STATE = true;
 			            break;
 			        case 3:
 						cls();
@@ -243,7 +260,9 @@ public class Technocore {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
 						}
-			            // Implement displaying network accuracy on TRAINING data logic
+			            // displaying network accuracy on TRAINING data
+
+
 			            break;
 			        case 4:
 						cls();
@@ -253,7 +272,29 @@ public class Technocore {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
 						}
-			            // Implement displaying network accuracy on TESTING data logic
+			            // displaying network accuracy on TESTING data
+						int[] correctPredictions = new int[10];
+						int totalSamples = Technocore.ezLabelsTest.length;
+						int[] Yb = Technocore.ezLabelsTest;
+			
+						for (int i = 0; i < totalSamples; i++) {
+							int predictedNumber = fatMan.predict(mnistMainTest[i]);
+							if (predictedNumber == Yb[i]) {
+								correctPredictions[Yb[i]]++;
+							}
+						}
+						int totalCorrect = 0;
+						System.out.println("displaying network accuracy on TESTING data.");
+						for (int classLabel = 0; classLabel < 10; classLabel++) {
+							System.out.println(Integer.toString(classLabel) + " = " + correctPredictions[classLabel] + "/" + Integer.toString(Technocore.labelsCountOfTest[classLabel]));
+							totalCorrect += correctPredictions[classLabel];
+							
+						}
+						double accuracy = (double)(totalCorrect * 100.0 / totalSamples);
+						System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/" + Integer.toString(totalSamples) +" = ");  // check to see that this prints! dummy
+						System.out.printf("%.3f %%", accuracy);
+						System.out.println();
+
 			            break;
 			        case 5:
 						cls();
@@ -263,7 +304,7 @@ public class Technocore {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
 						}
-			            // Implement running network on TESTING data and displaying images and labels logic
+			            // running network on TESTING data and displaying images and labels
 			            break;
 			        case 6:
 						cls();
@@ -273,7 +314,7 @@ public class Technocore {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
 						}
-			            // Implement displaying misclassified TESTING images logic
+			            // displaying misclassified TESTING images
 			            break;
 			        case 7:
 						cls();
@@ -283,7 +324,12 @@ public class Technocore {
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
 						}
-			            // Implement saving the network state to a file logic
+			            // saving the network state to a file
+						Matrix.saveMatrixToFile(fatMan.weightsHiddenLayer, "weightsHiddenLayer");
+						Matrix.saveMatrixToFile(fatMan.weightsOutputLayer, "weightsOutputLayer");
+						Matrix.saveMatrixToFile(fatMan.biasesH, "biasesH");
+						Matrix.saveMatrixToFile(fatMan.biasesOut, "biasesOut");
+						System.out.println("Saved weights and biases to files.");
 			            break;
 					case 11:
 						cls();
@@ -474,7 +520,8 @@ class Network {
 			System.out.println();
 
 			System.setOut(consoleOut);
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) {
 		}
 	}
 	
@@ -929,7 +976,7 @@ class Matrix {
 		return R;
 	}
 	public void dimPrint() {
-		System.out.printf("Dimensionality: %d by %d %n", this.Rows, this.Columns);
+		System.out.printf("Dimensions: %d by %d %n", this.Rows, this.Columns);
 	}
 
 	public void printM() {
@@ -940,4 +987,51 @@ class Matrix {
 			System.out.println();
 		}
 	}
+
+	public static void saveMatrixToFile(Matrix A, String filePath) {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+			for (double[] row : A.data) {
+				for (double col : row) {
+					writer.write(Double.toString(col));
+					writer.write(' '); // Separate elements with a space
+				}
+				writer.newLine(); // Start a new line for the next row
+			}
+		}
+		catch (IOException e) {
+		}
+	}
+    public static Matrix readArrayFromFile(String filePath) {
+		List<List<Double>> array = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] elements = line.split(" ");
+				List<Double> row = new ArrayList<>();
+				for (String element : elements) {
+					row.add(Double.parseDouble(element));
+				}
+				array.add(row);
+            }
+			// convert array list to 2d array that matrix constructor expects
+
+			int numRows = array.size();
+			// assume all rows have the same number of columns
+			int numCols = array.get(0).size();
+			double[][] tempArry = new double[numRows][numCols];
+			for (int i = 0; i < numRows; i++) {
+				List<Double> rowList = array.get(i);
+				for (int j = 0; j < numCols; j++) {
+					tempArry[i][j] = rowList.get(j);
+				}
+			}
+			System.out.println("Loaded Matrix.");
+			new Matrix(tempArry).dimPrint();
+            return new Matrix(tempArry);
+        }
+		catch (IOException e) {
+            return null;
+        }
+    }
+
 }
