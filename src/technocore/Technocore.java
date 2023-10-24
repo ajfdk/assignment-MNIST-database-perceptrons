@@ -28,9 +28,9 @@ import java.util.Scanner;
 // import java.util.concurrent.ThreadLocalRandom;
 
 public class Technocore {
-	static int EPOCHS = 10;
-	static double TRAINING_RATE = 3.0;
-	static int NUM_NEURONS_IN_HIDDEN_LAYER = 30;
+	static int EPOCHS = 30;
+	static double TRAINING_RATE = 0.03;
+	static int NUM_NEURONS_IN_HIDDEN_LAYER = 32;
 	static double[][] Xpart1 = 
 						  { {0, 1, 0, 1},
 							{1, 0, 1, 0},
@@ -45,10 +45,14 @@ public class Technocore {
 						};
 	static double[][] X;
 	static double[][] Y;
-	// ez labels is a easy to use 1d array of the labeled data
+	// ez labels is a easy to use 1d array of the labeled data (training)
 	static int[] ezLabels;
-	// labels count is a count of each class of digit by index = digit
+	// labels count is a count of each class of digit by index = digit (training)
 	static int[] labelsCount;
+
+	static int[] ezLabelsTest;
+	static int[] labelsCountOfTest;
+
 	static double scalingFactorImage = 1.0/255.0;
 
 	public static void main(String[] args) {
@@ -122,6 +126,71 @@ public class Technocore {
 		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
+		// load testing data here
+		String fileNTest = "data\\mnist_test.csv";
+		ArrayList<double[]> dataArrayTest  = new ArrayList<>();
+		ArrayList<int[]> 	labelArrayTest = new ArrayList<>();
+		try {
+			File fileTest = new File(fileNTest);
+			Scanner scanner = new Scanner(fileTest);
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				String[] strValues = line.split(",");
+
+				int[] label = new int[1];
+				label[0] = Integer.parseInt(strValues[0]);
+				labelArrayTest.add(label);
+
+				double[] fDataArray = new double[strValues.length - 1];
+				for (int i = 1; i < fDataArray.length; i++) {
+					fDataArray[i - 1] = Double.parseDouble(strValues[i]);
+				}
+				dataArrayTest.add(fDataArray);
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {
+			System.err.println("File not found: " + e.getMessage());
+		}
+		// convert form Arraylist to 2d array
+		double[][] mnistMainTest = new double[dataArrayTest.size()][];
+		for (int i = 0; i < dataArrayTest.size(); i++) {
+			mnistMainTest[i] = dataArrayTest.get(i);
+		}
+		// System.out.println(Arrays.toString(mnistMainTest[0]));
+
+		int[][] mnistLabelTest = new int[labelArrayTest.size()][];
+		for (int i = 0; i < labelArrayTest.size(); i++) {
+			mnistLabelTest[i] = labelArrayTest.get(i);
+		}
+		// make an ez to use 1d array of test labels
+		ezLabelsTest = new int[labelArrayTest.size()];
+		for (int i = 0; i < labelArrayTest.size(); i++) {
+			int[] tempy = labelArrayTest.get(i);
+			ezLabelsTest[i] = tempy[0];
+		}
+		labelsCountOfTest = new int[10];
+		for (int i = 0; i < ezLabelsTest.length; i++) {
+			labelsCountOfTest[ezLabelsTest[i]]++;
+		}
+		// System.out.println(Arrays.toString(labelsCountOfTest));
+		// System.out.println(Arrays.toString(ezLabelsTest));
+		// System.out.println("ezlabel length");
+		// System.out.println(ezLabels.length);
+
+		// labelsOfTest now contains a 2d array of one hot vectors of test labels
+		double[][] labelsOfTest = OHV(mnistLabelTest);
+
+		// for (int i = 500; i < 515; i++) {
+		// 	printArt(mnistMainTest[i]);
+		// 	System.out.println(Arrays.toString(labelsOfTest[i]));
+		// }
+		// System.out.println("- - - - - - - - - - -     - - - - - - - - - - - - - - - ");
+		// new Matrix(mnistMainTest).dimPrint();
+		// System.out.println("- - - - - - - - - - -     - - - - - - - - - - - - - - - ");
+		// new Matrix(labelsOfTest).dimPrint();
+		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+		// load testing data here ENDS
+		
 		// Network starts here
 
 		// our X and Y
@@ -130,6 +199,7 @@ public class Technocore {
 		// new Matrix(X).dimPrint();
 		// new Matrix(Y).dimPrint();
 		Network fatMan = new Network(784, NUM_NEURONS_IN_HIDDEN_LAYER, 10, false);
+		fatMan.printWBConsole();
 		fatMan.printWB();
 		// cls();
 		// if (true)
@@ -137,7 +207,8 @@ public class Technocore {
 		try (Scanner scanner = new Scanner(System.in)) {
 			// USER control starts here
 			int onlyOnce = 0;
-			while (onlyOnce < 1) { // change to while true
+			// while (onlyOnce < 1) { // change to while true
+			while (true) { // change to while true
 			    System.out.println("Choose an option:");
 			    System.out.println("[1] Train the network");
 			    System.out.println("[2] Load a pre-trained network");
@@ -406,6 +477,30 @@ class Network {
 		} catch (FileNotFoundException e) {
 		}
 	}
+	
+	public void printWBConsole() {
+			System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+			System.out.println();
+			System.out.printf("biases: Layer 1 (hidden)%n");
+			this.biasesH.printM();
+			// this.biasesH.dimPrint();
+			System.out.println();
+	
+			System.out.printf("biases: Layer 2 (output)%n");
+			this.biasesOut.printM();
+			// this.biasesOut.dimPrint();
+			System.out.println();
+	
+			System.out.printf("weights: Layer 1 (hidden)%n");
+			this.weightsHiddenLayer.printM();
+			// this.weightsHiddenLayer.dimPrint();
+			System.out.println();
+	
+			System.out.printf("weights: Layer 2 (output))%n");
+			this.weightsOutputLayer.printM();
+			// this.weightsOutputLayer.dimPrint();
+			System.out.println();
+	}
 
 	
 	public int predict(double[] sample) {
@@ -565,7 +660,7 @@ class Network {
 
 		Matrix outputActivation = new Matrix(this.outputDIM,1);
 		for (int i = 0; i < X.length; i++) { // or i < mbSize 
-			// do back prop, layers: input > hidden > output
+			// do back prop, layers: input -> hidden -> output
 			// feeding forwards
 			Matrix inputActivation = Matrix.makeMatrixFromArray(X[i]);
 			// scale divide by 255
@@ -773,6 +868,12 @@ class Matrix {
 				this.data[i][j] = this.data[i][j] + D.data[i][j];
 	}
 
+	/**
+	 * Returns A - D element by element
+	 * @param A
+	 * @param D
+	 * @return
+	 */
 	public static Matrix subtract(Matrix A, Matrix D) {
 		if (D.Rows != A.Rows || D.Columns != A.Columns)
 			throw new RuntimeException("You can't subtract matrices that way!");
@@ -803,8 +904,8 @@ class Matrix {
 		Matrix R = new Matrix(this.Rows, this.Columns);
 		for (int i = 0; i < this.Rows; i++) {
 			for (int j = 0; j < this.Columns; j++)
-				this.data[i][j] = 1 / (1 + Math.exp(-this.data[i][j]));
-				// R.data[i][j] = 1 / (1 + Math.pow(2.71828, -this.data[i][j]));
+				// this.data[i][j] = 1.0 / (1.0 + Math.exp(-this.data[i][j]));
+				R.data[i][j] = 1.0 / (1.0 + Math.pow(2.71828, -this.data[i][j]));
 		}
 		return R;
 	}
