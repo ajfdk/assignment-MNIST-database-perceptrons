@@ -23,8 +23,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 // import java.util.InputMismatchException;
+// import java.util.NoSuchElementException;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
 import java.io.BufferedReader;
@@ -210,16 +210,10 @@ public class Technocore {
 					System.out.println("[7] Save the network state to file");
 				}
 				System.out.println("[0] Exit");
-				try {
+				
+
 					int choice;
-					try {
-						choice = scanner.nextInt();
-					} catch (java.util.NoSuchElementException e) {
-						System.out.println("no such element");
-						scanner.nextInt();
-						continue;
-					}
-	
+					choice = scanner.nextInt();
 					switch (choice) {
 						case 1:
 							// Training the network
@@ -227,7 +221,6 @@ public class Technocore {
 							nn.SGD(mnistMainTrain, labels, EPOCHS, TRAINING_RATE, 10);
 							nn.printWB();
 							NETWORK_HAS_STATE = true;
-	
 							break;
 						case 2:
 							// loading a pre-trained network logic
@@ -317,8 +310,6 @@ public class Technocore {
 								break;
 							}
 	
-							Scanner scanner5 = new Scanner(System.in);
-	
 							correctPredictions = new int[10];
 							totalSamples = Technocore.ezLabelsTest.length;
 							Ylabels = Technocore.ezLabelsTest;
@@ -337,15 +328,14 @@ public class Technocore {
 								printArt(mnistMainTest[i]);
 	
 								System.out.println("Enter 1 to continue. Enter any other integer to quit.");
-								int input = scanner5.nextInt();
+								int input = scanner.nextInt();
 								
 								if (input != 1) {
-									scanner5.close();
 									break;
 								}
 							}
-							scanner5.close();
 							break;
+
 						case 6:
 							cls();
 							if (!NETWORK_HAS_STATE) {
@@ -355,9 +345,7 @@ public class Technocore {
 								break;
 							}
 							// displaying misclassified TESTING images
-	
-							Scanner scanner6 = new Scanner(System.in);
-	
+
 							correctPredictions = new int[10];
 							totalSamples = Technocore.ezLabelsTest.length;
 							Ylabels = Technocore.ezLabelsTest;
@@ -377,15 +365,15 @@ public class Technocore {
 								printArt(mnistMainTest[i]);
 	
 								System.out.println("Enter 1 to continue. Enter any other integer to quit.");
-								int input = scanner6.nextInt();
+								int input = scanner.nextInt();
+
 								if (input != 1) {
-									scanner6.close();
+									// scanner.nextLine();
 									break;
 								}
-								
 							}
-							scanner6.close();
 							break;
+
 						case 7:
 							cls();
 							if (!NETWORK_HAS_STATE) {
@@ -401,6 +389,7 @@ public class Technocore {
 							Matrix.saveMatrixToFile(nn.biasesOut, "biasesOut");
 							System.out.println("Saved weights and biases to files.");
 							break;
+
 						case 11:
 							cls();
 							System.out.println("That's ridiculous. It's not even funny.");
@@ -421,10 +410,12 @@ public class Technocore {
 	
 							System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 							break;
+
 						case 0:
 							cls();
 							System.out.println("Dave, this conversation can serve no purpose anymore. Good-bye.");
 							System.exit(0);
+
 						default:
 							cls();
 							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -433,12 +424,9 @@ public class Technocore {
 	
 					} // choice switch ends
 				}
-				catch (NoSuchElementException err) {
-					scanner.nextInt();
-					continue;
-				}
-			} // while true ends
-		}  // Try scanner ends
+				
+			} 
+
 	}
 
 	// makes a one hot vector using Matrix class constructor
