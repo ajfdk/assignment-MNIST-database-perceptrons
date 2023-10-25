@@ -12,25 +12,26 @@
  * When reading from a saved w and b files, the hidden layer dimension must match to what was saved, otherwise it will break.
  * 
  * using ==> jdk-17.0.8.7
+ * you might have to delete line 17 with the 'package technocore' on it to run the .java file when its out of place...
  */
 package technocore;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-// import java.util.InputMismatchException;
-// import java.util.NoSuchElementException;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Scanner;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+// import java.util.InputMismatchException;
+// import java.util.NoSuchElementException;
 
 public class Technocore {
 	static int EPOCHS = 12;
@@ -210,222 +211,219 @@ public class Technocore {
 					System.out.println("[7] Save the network state to file");
 				}
 				System.out.println("[0] Exit");
-				
 
-					int choice;
-					choice = scanner.nextInt();
-					switch (choice) {
-						case 1:
-							// Training the network
-							// cls();
-							nn.SGD(mnistMainTrain, labels, EPOCHS, TRAINING_RATE, 10);
-							nn.printWB();
-							NETWORK_HAS_STATE = true;
+				int choice;
+				choice = scanner.nextInt();
+				switch (choice) {
+					case 1:
+						// Training the network
+						// cls();
+						nn.SGD(mnistMainTrain, labels, EPOCHS, TRAINING_RATE, 10);
+						nn.printWB();
+						NETWORK_HAS_STATE = true;
+						break;
+					case 2:
+						// loading a pre-trained network logic
+						cls();
+						nn.weightsHiddenLayer = Matrix.readArrayFromFile("weightsHiddenLayer");
+						nn.weightsOutputLayer = Matrix.readArrayFromFile("weightsOutputLayer");
+						nn.biasesH = Matrix.readArrayFromFile("biasesH");
+						nn.biasesOut = Matrix.readArrayFromFile("biasesOut");
+						System.out.println("Loaded weights and biases from files.");
+
+						// once done loading, state is true
+						NETWORK_HAS_STATE = true;
+						break;
+					case 3:
+						// displaying network accuracy on TRAINING data
+						cls();
+						if (!NETWORK_HAS_STATE) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
-						case 2:
-							// loading a pre-trained network logic
-							cls();
-							nn.weightsHiddenLayer = Matrix.readArrayFromFile("weightsHiddenLayer");
-							nn.weightsOutputLayer = Matrix.readArrayFromFile("weightsOutputLayer");
-							nn.biasesH = Matrix.readArrayFromFile("biasesH");
-							nn.biasesOut = Matrix.readArrayFromFile("biasesOut");
-							System.out.println("Loaded weights and biases from files.");
-	
-							// once done loading, state is true
-							NETWORK_HAS_STATE = true;
+						}
+						int[] correctPredictions = new int[10];
+						int totalSamples = Technocore.ezLabels.length;
+						int[] Ylabels = Technocore.ezLabels;
+
+						for (int i = 0; i < totalSamples; i++) {
+							int predictedNumber = nn.predict(mnistMainTrain[i]);
+							if (predictedNumber == Ylabels[i]) {
+								correctPredictions[Ylabels[i]]++;
+							}
+						}
+						int totalCorrect = 0;
+						System.out.println("displaying network accuracy on TRAINING data");
+						for (int classLabel = 0; classLabel < 10; classLabel++) {
+							System.out.println(Integer.toString(classLabel) + " = " + correctPredictions[classLabel]
+									+ "/" + Integer.toString(Technocore.labelsCount[classLabel]));
+							totalCorrect += correctPredictions[classLabel];
+						}
+						double accuracy = (double) (totalCorrect * 100.0 / totalSamples);
+						System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/60000 = ");
+						System.out.printf("%.3f %%", accuracy);
+						System.out.println();
+
+						break;
+					case 4:
+						// displaying network accuracy on TESTING data
+						cls();
+						if (!NETWORK_HAS_STATE) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
-						case 3:
-							// displaying network accuracy on TRAINING data
-							cls();
-							if (!NETWORK_HAS_STATE) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+						}
+						correctPredictions = new int[10];
+						totalSamples = Technocore.ezLabelsTest.length;
+						Ylabels = Technocore.ezLabelsTest;
+
+						for (int i = 0; i < totalSamples; i++) {
+							int predictedNumber = nn.predict(mnistMainTest[i]);
+							if (predictedNumber == Ylabels[i]) {
+								correctPredictions[Ylabels[i]]++;
+							}
+						}
+						totalCorrect = 0;
+						System.out.println("displaying network accuracy on TESTING data.");
+						for (int classLabel = 0; classLabel < 10; classLabel++) {
+							System.out.println(Integer.toString(classLabel) + " = " + correctPredictions[classLabel]
+									+ "/" + Integer.toString(Technocore.labelsCountOfTest[classLabel]));
+							totalCorrect += correctPredictions[classLabel];
+
+						}
+						accuracy = (double) (totalCorrect * 100.0 / totalSamples);
+						System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/"
+								+ Integer.toString(totalSamples) + " = "); // check to see that this prints! dummy
+						System.out.printf("%.3f %%", accuracy);
+						System.out.println();
+
+						break;
+					case 5:
+						// running network on TESTING data and displaying images and labels
+						cls();
+						if (!NETWORK_HAS_STATE) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							break;
+						}
+
+						correctPredictions = new int[10];
+						totalSamples = Technocore.ezLabelsTest.length;
+						Ylabels = Technocore.ezLabelsTest;
+
+						for (int i = 0; i < totalSamples; i++) {
+							System.out.print("Testing Case #" + Integer.toString(i));
+							System.out.print(":	Correct classification = " + Integer.toString(Ylabels[i]));
+							int predictedNumber = nn.predict(mnistMainTest[i]);
+							System.out.print("	Network output = " + predictedNumber);
+							if (predictedNumber == Ylabels[i]) {
+								System.out.println("	Correct. ");
+							} else {
+								System.out.println("	Incorrect. ");
+							}
+							printArt(mnistMainTest[i]);
+
+							System.out.println("Enter 1 to continue. Enter any other integer to quit.");
+							int input = scanner.nextInt();
+
+							if (input != 1) {
 								break;
 							}
-							int[] correctPredictions = new int[10];
-							int totalSamples = Technocore.ezLabels.length;
-							int[] Ylabels = Technocore.ezLabels;
-	
-							for (int i = 0; i < totalSamples; i++) {
-								int predictedNumber = nn.predict(mnistMainTrain[i]);
-								if (predictedNumber == Ylabels[i]) {
-									correctPredictions[Ylabels[i]]++;
-								}
-							}
-							int totalCorrect = 0;
-							System.out.println("displaying network accuracy on TRAINING data");
-							for (int classLabel = 0; classLabel < 10; classLabel++) {
-								System.out.println(Integer.toString(classLabel) + " = " + correctPredictions[classLabel]
-										+ "/" + Integer.toString(Technocore.labelsCount[classLabel]));
-								totalCorrect += correctPredictions[classLabel];
-							}
-							double accuracy = (double) (totalCorrect * 100.0 / totalSamples);
-							System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/60000 = ");
-							System.out.printf("%.3f %%", accuracy);
-							System.out.println();
-	
+						}
+						break;
+
+					case 6:
+						cls();
+						if (!NETWORK_HAS_STATE) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
-						case 4:
-							// displaying network accuracy on TESTING data
-							cls();
-							if (!NETWORK_HAS_STATE) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								break;
-							}
-							correctPredictions = new int[10];
-							totalSamples = Technocore.ezLabelsTest.length;
-							Ylabels = Technocore.ezLabelsTest;
-	
-							for (int i = 0; i < totalSamples; i++) {
-								int predictedNumber = nn.predict(mnistMainTest[i]);
-								if (predictedNumber == Ylabels[i]) {
-									correctPredictions[Ylabels[i]]++;
-								}
-							}
-							totalCorrect = 0;
-							System.out.println("displaying network accuracy on TESTING data.");
-							for (int classLabel = 0; classLabel < 10; classLabel++) {
-								System.out.println(Integer.toString(classLabel) + " = " + correctPredictions[classLabel]
-										+ "/" + Integer.toString(Technocore.labelsCountOfTest[classLabel]));
-								totalCorrect += correctPredictions[classLabel];
-	
-							}
-							accuracy = (double) (totalCorrect * 100.0 / totalSamples);
-							System.out.print("Accuracy = " + Integer.toString(totalCorrect) + "/"
-									+ Integer.toString(totalSamples) + " = "); // check to see that this prints! dummy
-							System.out.printf("%.3f %%", accuracy);
-							System.out.println();
-	
-							break;
-						case 5:
-							// running network on TESTING data and displaying images and labels
-							cls();
-							if (!NETWORK_HAS_STATE) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								break;
-							}
-	
-							correctPredictions = new int[10];
-							totalSamples = Technocore.ezLabelsTest.length;
-							Ylabels = Technocore.ezLabelsTest;
-	
-							for (int i = 0; i < totalSamples; i++) {
+						}
+						// displaying misclassified TESTING images
+
+						correctPredictions = new int[10];
+						totalSamples = Technocore.ezLabelsTest.length;
+						Ylabels = Technocore.ezLabelsTest;
+
+						for (int i = 0; i < totalSamples; i++) {
+							int predictedNumber = nn.predict(mnistMainTest[i]);
+							if (predictedNumber == Ylabels[i]) {
+								continue;
+								// System.out.println(" Correct. ");
+							} else {
 								System.out.print("Testing Case #" + Integer.toString(i));
-								System.out.print(":	Correct classification = " + Integer.toString(Ylabels[i]));
-								int predictedNumber = nn.predict(mnistMainTest[i]);
+								System.out.print(": Correct classification = " + Integer.toString(Ylabels[i]));
 								System.out.print("	Network output = " + predictedNumber);
-								if (predictedNumber == Ylabels[i]) {
-									System.out.println("	Correct. ");
-								}
-								else {
-									System.out.println("	Incorrect. ");
-								}
-								printArt(mnistMainTest[i]);
-	
-								System.out.println("Enter 1 to continue. Enter any other integer to quit.");
-								int input = scanner.nextInt();
-								
-								if (input != 1) {
-									break;
-								}
+								System.out.println("	Incorrect. ");
 							}
-							break;
+							printArt(mnistMainTest[i]);
 
-						case 6:
-							cls();
-							if (!NETWORK_HAS_STATE) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("Enter 1 to continue. Enter any other integer to quit.");
+							int input = scanner.nextInt();
+
+							if (input != 1) {
+								// scanner.nextLine();
 								break;
 							}
-							// displaying misclassified TESTING images
+						}
+						break;
 
-							correctPredictions = new int[10];
-							totalSamples = Technocore.ezLabelsTest.length;
-							Ylabels = Technocore.ezLabelsTest;
-	
-							for (int i = 0; i < totalSamples; i++) {
-								int predictedNumber = nn.predict(mnistMainTest[i]);
-								if (predictedNumber == Ylabels[i]) {
-									continue;
-									// System.out.println("	Correct. ");
-								}
-								else {
-									System.out.print("Testing Case #" + Integer.toString(i));
-									System.out.print(": Correct classification = " + Integer.toString(Ylabels[i]));
-									System.out.print("	Network output = " + predictedNumber);
-									System.out.println("	Incorrect. ");
-								}
-								printArt(mnistMainTest[i]);
-	
-								System.out.println("Enter 1 to continue. Enter any other integer to quit.");
-								int input = scanner.nextInt();
-
-								if (input != 1) {
-									// scanner.nextLine();
-									break;
-								}
-							}
+					case 7:
+						cls();
+						if (!NETWORK_HAS_STATE) {
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+							System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
+							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 							break;
+						}
+						// saving the network state to a file
+						Matrix.saveMatrixToFile(nn.weightsHiddenLayer, "weightsHiddenLayer");
+						Matrix.saveMatrixToFile(nn.weightsOutputLayer, "weightsOutputLayer");
+						Matrix.saveMatrixToFile(nn.biasesH, "biasesH");
+						Matrix.saveMatrixToFile(nn.biasesOut, "biasesOut");
+						System.out.println("Saved weights and biases to files.");
+						break;
 
-						case 7:
-							cls();
-							if (!NETWORK_HAS_STATE) {
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								System.out.println("I'm sorry, Dave. I'm afraid I can't do that.");
-								System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-								break;
-							}
-							// saving the network state to a file
-							Matrix.saveMatrixToFile(nn.weightsHiddenLayer, "weightsHiddenLayer");
-							Matrix.saveMatrixToFile(nn.weightsOutputLayer, "weightsOutputLayer");
-							Matrix.saveMatrixToFile(nn.biasesH, "biasesH");
-							Matrix.saveMatrixToFile(nn.biasesOut, "biasesOut");
-							System.out.println("Saved weights and biases to files.");
-							break;
+					case 11:
+						cls();
+						System.out.println("That's ridiculous. It's not even funny.");
+						System.out.println("this is the debug command. testing part 1:");
+						System.out.println("- - - - - - - - - - -   Matrix X  - - - - - - - - - - - - - - - ");
+						new Matrix(Xpart1).printM();
+						new Matrix(Xpart1).dimPrint();
+						System.out.println("- - - - - - - - - - -   Matrix Y  - - - - - - - - - - - - - - - ");
+						new Matrix(Ypart1).printM();
+						new Matrix(Ypart1).dimPrint();
+						System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+						System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
-						case 11:
-							cls();
-							System.out.println("That's ridiculous. It's not even funny.");
-							System.out.println("this is the debug command. testing part 1:");
-							System.out.println("- - - - - - - - - - -   Matrix X  - - - - - - - - - - - - - - - ");
-							new Matrix(Xpart1).printM();
-							new Matrix(Xpart1).dimPrint();
-							System.out.println("- - - - - - - - - - -   Matrix Y  - - - - - - - - - - - - - - - ");
-							new Matrix(Ypart1).printM();
-							new Matrix(Ypart1).dimPrint();
-							System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-							System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-	
-							Network exampleNN = new Network(
-									4, 3, 2, true);
-	
-							exampleNN.SGD(Xpart1, Ypart1, 6, 10.0, 2);
-	
-							System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
-							break;
+						Network exampleNN = new Network(
+								4, 3, 2, true);
 
-						case 0:
-							cls();
-							System.out.println("Dave, this conversation can serve no purpose anymore. Good-bye.");
-							System.exit(0);
+						exampleNN.SGD(Xpart1, Ypart1, 6, 10.0, 2);
 
-						default:
-							cls();
-							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-							System.out.println("This mission is too important for me to allow you to jeopardize it.");
-							System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-	
-					} // choice switch ends
-				}
-				
-			} 
+						System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+						break;
+
+					case 0:
+						cls();
+						System.out.println("Dave, this conversation can serve no purpose anymore. Good-bye.");
+						System.exit(0);
+
+					default:
+						cls();
+						System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+						System.out.println("This mission is too important for me to allow you to jeopardize it.");
+						System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+				} // choice switch ends
+			}
+
+		}
 
 	}
 
