@@ -30,12 +30,10 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-// import java.util.InputMismatchException;
-// import java.util.NoSuchElementException;
 
 public class Technocore {
-	static int EPOCHS = 12;
-	static double TRAINING_RATE = 0.30;
+	static int EPOCHS = 10;
+	static double TRAINING_RATE = 0.005;
 	static int NUM_NEURONS_IN_HIDDEN_LAYER = 32;
 	// used for part1 testing
 	static double[][] Xpart1 = { { 0, 1, 0, 1 },
@@ -93,7 +91,6 @@ public class Technocore {
 		for (int i = 0; i < dataArray.size(); i++) {
 			mnistMainTrain[i] = dataArray.get(i);
 		}
-		// System.out.println(Arrays.toString(mnistMainTrain[0]));
 
 		int[][] mnistLabel = new int[labelArray.size()][];
 		for (int i = 0; i < labelArray.size(); i++) {
@@ -109,22 +106,8 @@ public class Technocore {
 		for (int i = 0; i < ezLabels.length; i++) {
 			labelsCount[ezLabels[i]]++;
 		}
-		// System.out.println(Arrays.toString(labelsCount));
-
-		// System.out.println(Arrays.toString(ezLabels));
-		// System.out.println("ezlabel length");
-		// System.out.println(ezLabels.length);
 
 		double[][] labels = OHV(mnistLabel);
-
-		// for (int i = 500; i < 515; i++) {
-		// printArt(mnistMainTrain[i]);
-		// System.out.println(Arrays.toString(labels[i]));
-		// }
-
-		// new Matrix(mnistMainTrain).dimPrint();
-
-		// new Matrix(labels).dimPrint();
 
 		// load testing data here
 		String fileNTest = "data\\mnist_test.csv";
@@ -156,7 +139,6 @@ public class Technocore {
 		for (int i = 0; i < dataArrayTest.size(); i++) {
 			mnistMainTest[i] = dataArrayTest.get(i);
 		}
-		// System.out.println(Arrays.toString(mnistMainTest[0]));
 
 		int[][] mnistLabelTest = new int[labelArrayTest.size()][];
 		for (int i = 0; i < labelArrayTest.size(); i++) {
@@ -172,29 +154,14 @@ public class Technocore {
 		for (int i = 0; i < ezLabelsTest.length; i++) {
 			labelsCountOfTest[ezLabelsTest[i]]++;
 		}
-		// System.out.println(Arrays.toString(labelsCountOfTest));
-		// System.out.println(Arrays.toString(ezLabelsTest));
-		// System.out.println("ezlabel length");
-		// System.out.println(ezLabels.length);
 
-		// labelsOfTest now contains a 2d array of one hot vectors of test labels
-		// double[][] labelsOfTest = OHV(mnistLabelTest); // dont need this
-
-		// for (int i = 500; i < 515; i++) {
-		// printArt(mnistMainTest[i]);
-		// System.out.println(Arrays.toString(labelsOfTest[i]));
-		// }
-		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - ");
-		// new Matrix(mnistMainTest).dimPrint();
-		// System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - ");
-		// new Matrix(labelsOfTest).dimPrint();
 		// load testing data here ENDS
 
 		// Network starts here
 
 		// our X and Y
-		// X = mnistMainTrain;
-		// Y = labels;
+		// X -> mnistMainTrain;
+		// Y -> labels;
 		Network nn = new Network(784, NUM_NEURONS_IN_HIDDEN_LAYER, 10, false);
 		// cls();
 		try (Scanner scanner = new Scanner(System.in)) {
@@ -353,7 +320,6 @@ public class Technocore {
 							int predictedNumber = nn.predict(mnistMainTest[i]);
 							if (predictedNumber == Ylabels[i]) {
 								continue;
-								// System.out.println(" Correct. ");
 							} else {
 								System.out.print("Testing Case #" + Integer.toString(i));
 								System.out.print(": Correct classification = " + Integer.toString(Ylabels[i]));
@@ -366,7 +332,6 @@ public class Technocore {
 							int input = scanner.nextInt();
 
 							if (input != 1) {
-								// scanner.nextLine();
 								break;
 							}
 						}
@@ -427,7 +392,11 @@ public class Technocore {
 
 	}
 
-	// makes a one hot vector using Matrix class constructor
+	/**
+	 * Makes a one hot vector using Matrix class constructor.
+	 * @param HotNumber is the int to make hot.
+	 * @return matrix of one hot vector.
+	 */
 	public static Matrix getOneHotVector(int HotNumber) {
 		if (HotNumber > 9 || HotNumber < 0)
 			throw new RuntimeException("Something bad happened and its not my fault.");
@@ -437,6 +406,11 @@ public class Technocore {
 		return resultingOneHotVector;
 	}
 
+	/**
+	 * One hot vector maker. takes in 2d int arrays and outputs 2d int arrays.
+	 * @param mnistLabel is a 2d int array of just the first ints in the data.
+	 * @return An 2d array of the one hot vectors on each row.
+	 */
 	public static double[][] OHV(int[][] mnistLabel) {
 		double[][] vectors = new double[mnistLabel.length][10];
 		for (int i = 0; i < mnistLabel.length; i++) {
@@ -444,13 +418,14 @@ public class Technocore {
 				throw new RuntimeException("Something bad happened and its not my fault.");
 			int theINDEXsays = (int) mnistLabel[i][0];
 			vectors[i][theINDEXsays] = 1.0;
-			// System.out.println((double)mnistLabel[i][0]);
 		}
 		return vectors;
 	}
 
+	/**
+	 * Clear screen. Uses some ANSI escape codes to clear screen.
+	 */
 	public static void cls() {
-		// some ANSI escape codes to clear screen
 		System.out.print("\033[H\033[2J");
 		System.out.flush();
 	}
@@ -489,7 +464,12 @@ public class Technocore {
 		return chars[tempChar];
 	}
 
-	// the Fisher–Yates shuffle from wikipedia
+
+	/**
+	 * 	The Fisher–Yates shuffle from wikipedia.
+	 * Used to shuffle mini batches.
+	 * @param arrayMe
+	 */
 	static void shuffleMe(int[] arrayMe) {
 		Random randomMe = new Random();
 		// Random randomMe = ThreadLocalRandom.current().
@@ -502,6 +482,13 @@ public class Technocore {
 		}
 	}
 
+	/**
+	 * Returns the index of the maximum double in the array.
+	 * Used to see which activation of the output neurons is the highest.
+	 * This is assumed to be what the network classifies the input as.
+	 * @param array
+	 * @return index of the maximum value
+	 */
 	static int giveMeIndexOfMax(double[] array) {
 		int maxIndex = 0;
 		double maxValue = array[0];
@@ -525,9 +512,17 @@ class Network {
 	int hiddenDIM;
 	int outputDIM;
 
-	// double learningRate = 10.0;
-	private boolean istest;
+	private boolean istest; 
 
+	/**
+	 * Network implements a neural network. uses the stochastic gradient descent method. 
+	 * 		Assumes sigmoid activation fn. Hard coded for only 1 hidden layer.
+	 * 		Can work on any dim imput and output and hidden layer neurons.
+	 * @param inputDIM
+	 * @param hiddenDIM
+	 * @param outputDIM
+	 * @param istest controls if doing part 1 (if true) or part 2 MNIST (if false)
+	 */
 	public Network(int inputDIM, int hiddenDIM, int outputDIM, boolean istest) {
 		this.inputDIM = inputDIM;
 		this.hiddenDIM = hiddenDIM;
@@ -655,26 +650,21 @@ class Network {
 	 *            mini batch size
 	 */
 	public void SGD(double[][] X, double[][] Y, int epochs, double tRate, int mbSize) {
-		int b = 0; // batch counter
+		int b = 0; // batch counter for part 1 (example small network)
 		int[] shuffledA = new int[X.length];
 		for (int i = 0; i < shuffledA.length; i++)
 			shuffledA[i] = i;
 
 		for (int j = 0; j < epochs; j++) {
 			System.out.printf("~~~~~~~		The Epoch is: %d		~~~~~~~%n", j + 1);
-			// randomize minibatches for part 2
-			// System.out.println(X[0].length);
+
+			// use this array 'suffledA' to randomize the minibatches
 			Technocore.shuffleMe(shuffledA);
 
-			// System.out.println(Arrays.toString(shuffledA));
-
-			// System.out.println(X.length / mbSize);
 			if (!istest) {
 
-				// for (int miniB = 0; miniB < (X.length / mbSize); miniB++) {
 				for (int miniB = 0; miniB < (X.length / mbSize); miniB++) {
 					int startIndex = miniB * mbSize;
-					// int endIndex = (miniB + 1) * mbSize;
 
 					double[][] X1 = new double[mbSize][this.inputDIM];
 					double[][] Y1 = new double[mbSize][this.outputDIM];
@@ -682,29 +672,11 @@ class Network {
 						X1[i] = Arrays.copyOfRange(X[shuffledA[startIndex + i]], 0, inputDIM);
 						Y1[i] = Arrays.copyOfRange(Y[shuffledA[startIndex + i]], 0, outputDIM);
 					}
-					// System.out.println(Arrays.toString(X1[0]));
-
-					// System.out.println("~~~~~~~~~~~");
-					// for (int i = 0; i < X1.length; i++) {
-					// Technocore.printArt(X1[i]);
-					// System.out.printf(" Image label: %d%n", Technocore.giveMeIndexOfMax(Y1[i]));
-					// }
-
-					// System.out.println(Arrays.toString(Y1[0]));
-					// System.out.println("~~~~~~~~~~~");
 
 					updateOnMiniBatch(X1, Y1, tRate, mbSize);
 
-					// System.out.printf("The minibatch number is: %d%n", miniB);
-					// System.out.println("~~~~");
-
-					// System.out.println("- - - - - - - - - - - - - - - ");
-					// System.out.printf("The minibatch number is: %d%n", miniB);
-					// System.out.println("~~~~");
-					// System.out.println("~~~~");
-					// printWB();
 				}
-				// System.out.print("...");
+
 			} else {
 				// divide up minibatches for test input
 				double[][] X1 = new double[2][4];
@@ -741,7 +713,6 @@ class Network {
 			}
 			// after each epoch print accuracy
 			if (!istest) {
-				// if(false) {
 				int[] correctPredictions = new int[10];
 				int totalSamples = Technocore.ezLabels.length;
 				int[] Yb = Technocore.ezLabels;
@@ -791,13 +762,12 @@ class Network {
 		Matrix outputActivation = new Matrix(this.outputDIM, 1);
 		for (int i = 0; i < X.length; i++) { // or i < mbSize
 			// do back prop, layers: input -> hidden -> output
+
 			// feeding forwards
 			Matrix inputActivation = Matrix.makeMatrixFromArray(X[i]);
+			
 			// scale divide by 255
-			// inputActivation.printM();
 			inputActivation.scale(Technocore.scalingFactorImage);
-			// System.out.println("AFTER SCALING");
-			// inputActivation.printM();
 
 			Matrix hiddenZ = Matrix.MatrixMultiply(weightsHiddenLayer, inputActivation);
 			hiddenZ.add(biasesH);
@@ -808,16 +778,8 @@ class Network {
 			outputActivation = new Matrix(outputZ);
 			outputActivation = outputActivation.sigmoid();
 
-			// System.out.println();
-			// System.out.println("Training Case Activations:");
-			// outputActivation.printM();
-			// System.out.println("Which number highest?:");
-			// double[] prediction = Matrix.matrixToVector(outputActivation);
-			// outputActivation.dimPrint();
-			// System.out.printf("Which number highest?: %d%n",
-			// Technocore.giveMeIndexOfMax(prediction));
+			// feed forward done
 
-			// ff done
 
 			// backwards passthrough
 			Matrix yMatrix = Matrix.makeMatrixFromArray(Y[i]);
@@ -845,13 +807,12 @@ class Network {
 		nablaBHid.scale(lRate / mbSize);
 		this.biasesH = Matrix.subtract(this.biasesH, nablaBHid);
 	}
-
 }
 
 /**
- * from my linear algebra textbook. a matrix is defined by the size of its rows
+ * From my linear algebra textbook. A matrix is defined by the size of its rows
  * and columns.
- * m rows and n columns
+ * [ m rows and n columns ]
  */
 class Matrix {
 	private int Rows; // M rows
@@ -869,9 +830,9 @@ class Matrix {
 		// for (int i = 0; i < Rows; i++)
 		// for ( int j = 0; j < Columns; j++)
 		// this.data[i][j] = Math.random() * 2 - 1;
-		// note: ( random gives a double from 0 to 1 ) times 2 - 1 scales it from -1 to
-		// 1
-		// ^ this bit up here didn't work great!! use a gaussian!
+		// note: ( random gives a double from 0 to 1 ) times 2 - 1 
+		// 			scales it from -1 to 1
+		// ^ this didn't work great!! use a gaussian!
 
 		Random Randy = new Random();
 		double mean = 0.0;
@@ -881,7 +842,7 @@ class Matrix {
 				this.data[i][j] = Randy.nextGaussian() * stdDev + mean;
 			}
 
-	} // end constructor
+	}
 
 	// constructor for passing 2 d array to the matrix class
 	public Matrix(double[][] data) {
